@@ -1,0 +1,15 @@
+.chessboard TD {
+    width: 400px;
+    height: 400px;
+    padding: 50px;
+    text-align: center;
+    font-size: 30px;
+  }
+  
+  .black {
+    background-color: #B475C2;
+  }
+  
+  .white {
+    background-color: #FFFFFF;
+  }
