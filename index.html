@@ -133,7 +133,7 @@
 
                 const targetPiece = this.board[tx][ty];
                 if (targetPiece) {
-                    this.captured[this.turn].push(targetPiece);
+                    this.captured[this.turn === 'w' ? 'b' : 'w'].push(targetPiece);
                     this.updateCapturedPiecesDisplay();
                 }
 
