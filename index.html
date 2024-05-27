@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Game</title>
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .board {
+            width: 600px;
+            height: 600px;
+            border: 2px solid #333;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .square-55d63 {
+            transition: background-color 0.3s ease;
+        }
+
+        .square-55d63.highlight {
+            background-color: #ff0;
+        }
+
+        .square-55d63.animate-move {
+            transition: transform 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div id="board" class="board"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const boardElement = document.getElementById('board');
+            const game = new Chess();
+            const board = Chessboard(boardElement, {
+                draggable: true,
+                position: 'start',
+                onDragStart: onDragStart,
+                onDrop: onDrop,
+                onMouseoverSquare: onMouseoverSquare,
+                onMouseoutSquare: onMouseoutSquare,
+                onMoveEnd: onMoveEnd
+            });
+
+            function onDragStart(source, piece, position, orientation) {
+                if (game.in_checkmate() === true || game.in_draw() === true ||
+                    piece.search(/^b/) !== -1) {
+                    return false;
+                }
+            }
+
+            function onDrop(source, target) {
+                const move = game.move({
+                    from: source,
+                    to: target,
+                    promotion: 'q' // always promote to a queen for simplicity
+                });
+
+                if (move === null) return 'snapback';
+
+                highlightMove(source, target);
+            }
+
+            function highlightMove(source, target) {
+                const sourceSquare = document.querySelector(`.square-${source}`);
+                const targetSquare = document.querySelector(`.square-${target}`);
+                sourceSquare.classList.add('highlight');
+                targetSquare.classList.add('highlight');
+                setTimeout(() => {
+                    sourceSquare.classList.remove('highlight');
+                    targetSquare.classList.remove('highlight');
+                }, 500);
+            }
+
+            function onMouseoverSquare(square, piece) {
+                const moves = game.moves({ square: square, verbose: true });
+                if (moves.length === 0) return;
+
+                greySquare(square);
+
+                for (let i = 0; i < moves.length; i++) {
+                    greySquare(moves[i].to);
+                }
+            }
+
+            function onMouseoutSquare(square, piece) {
+                removeGreySquares();
+            }
+
+            function removeGreySquares() {
+                const squares = document.querySelectorAll('.square-55d63');
+                squares.forEach(square => {
+                    square.style.background = '';
+                });
+            }
+
+            function greySquare(square) {
+                const squareEl = document.querySelector(`.square-${square}`);
+                squareEl.style.background = '#a9a9a9';
+            }
+
+            function onMoveEnd() {
+                board.position(game.fen());
+            }
+        });
+    </script>
+</body>
+</html>
+
+
+
