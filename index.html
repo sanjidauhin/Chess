@@ -1,315 +1,50 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chess Game</title>
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background-color: #f0f0f0;
-            margin: 0;
-            font-family: Arial, sans-serif;
-        }
-
-        .game-container {
-            display: flex;
-            align-items: center;
-        }
-
-        .board {
-            width: 600px;
-            height: 600px;
-            border: 2px solid #333;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-            display: grid;
-            grid-template: repeat(8, 1fr) / repeat(8, 1fr);
-        }
-
-        .square {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 2rem;
-        }
-
-        .square:nth-child(odd) {
-            background-color: #769656;
-        }
-
-        .square:nth-child(even) {
-            background-color: #eeeed2;
-        }
-
-        .highlight {
-            background-color: #ff0 !important;
-        }
-
-        .white-piece {
-            color: #fff;
-        }
-
-        .piece {
-            font-size: 2.5rem;
-        }
-
-        .captured-pieces {
-            margin: 0 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .captured-pieces .player {
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .captured-pieces .pieces {
-            display: flex;
-            flex-wrap: wrap;
-        }
-
-        .captured-pieces .piece {
-            font-size: 1.5rem;
-            margin: 5px;
-        }
-    </style>
+  <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1;" /> 
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+  <meta name="proj-version" content="1.0" />
+  <title>Chess</title>
+  <link href="game.css" rel="stylesheet">
+  <script type="text/javascript" src="lib.min.js"></script>
+  <script type="text/javascript" src="game.min.js"></script>
 </head>
+
 <body>
-    <div class="game-container">
-        <div class="captured-pieces" id="captured-white">
-            <div class="player">White's Captured Pieces</div>
-            <div class="pieces" id="white-pieces"></div>
-        </div>
-        <div id="board" class="board"></div>
-        <div class="captured-pieces" id="captured-black">
-            <div class="player">Black's Captured Pieces</div>
-            <div class="pieces" id="black-pieces"></div>
-        </div>
-    </div>
-    <script>
-        class Chess {
-            constructor() {
-                this.board = this.createBoard();
-                this.turn = 'w';
-                this.history = [];
-                this.captured = {
-                    'w': [],
-                    'b': []
-                };
-            }
+  <div id="pages">
 
-            createBoard() {
-                const board = [];
-                for (let i = 0; i < 8; i++) {
-                    const row = new Array(8).fill(null);
-                    board.push(row);
-                }
-                const initialSetup = [
-                    ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
-                    ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
-                    null, null, null, null,
-                    ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
-                    ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
-                ];
+    <section id="menu">
+      <h1><img src="icon.png"/> Chess</h1>
+      <ul>
+        <li><a class="showOnlyIfContinuableGame" href="#!/game/continue">Continue Game</a></li>
+        <li><a href="#!/game/new">New Game</a></li>
+        <li><a href="#!/help">Help</a></li>
+      </ul>
+    </section>
 
-                initialSetup.forEach((row, i) => {
-                    if (row) row.forEach((piece, j) => {
-                        board[i][j] = piece ? (i < 2 ? 'b' + piece : 'w' + piece) : null;
-                    });
-                });
+    <section id="game">
+      <header class="buttons">
+        <a href="javascript:history.back()" class="back">Back</a>
+      </header>
+      <div id="black-eated"></div>
+      <div id="chessboardContainer">
+        <div id="chessboard"></div>
+      </div>
+      <div id="white-eated"></div>
+    </section>
 
-                return board;
-            }
+    <section id="help">
+      <header class="buttons">
+        <a href="javascript:history.back()" class="back">Back</a>
+      </header>
+      <div class="content">
+        <p class="i18n-help_welcome">Welcome to the Chess game demo.</p>
+        <p class="i18n-credit">by Gaetan Renaudeau - @greweb</p>
+      </div>
+    </section>
 
-            move(from, to) {
-                const [fx, fy] = from;
-                const [tx, ty] = to;
-                const piece = this.board[fx][fy];
-                if (!piece || piece[0] !== this.turn) return null;
-
-                const targetPiece = this.board[tx][ty];
-                if (targetPiece) {
-                    this.captured[this.turn === 'w' ? 'b' : 'w'].push(targetPiece);
-                    this.updateCapturedPiecesDisplay();
-                }
-
-                this.board[tx][ty] = piece;
-                this.board[fx][fy] = null;
-                this.turn = this.turn === 'w' ? 'b' : 'w';
-                this.history.push({ from, to, piece });
-                return { from, to, piece };
-            }
-
-            getPiece(square) {
-                const [x, y] = square;
-                return this.board[x][y];
-            }
-
-            getValidMoves(square) {
-                const [x, y] = square;
-                const piece = this.board[x][y];
-                if (!piece) return [];
-                const moves = [];
-                if (piece[1] === 'p') {
-                    const direction = piece[0] === 'w' ? -1 : 1;
-                    const targetX = x + direction;
-                    if (targetX >= 0 && targetX < 8 && !this.board[targetX][y]) {
-                        moves.push([targetX, y]);
-                    }
-                } else if (piece[1] === 'k') {
-                    for (let dx = -1; dx <= 1; dx++) {
-                        for (let dy = -1; dy <= 1; dy++) {
-                            const targetX = x + dx;
-                            const targetY = y + dy;
-                            if (targetX >= 0 && targetX < 8 && targetY >= 0 && targetY < 8 &&
-                                (dx !== 0 || dy !== 0) && (!this.board[targetX][targetY] || this.board[targetX][targetY][0] !== piece[0])) {
-                                moves.push([targetX, targetY]);
-                            }
-                        }
-                    }
-                } else if (piece[1] === 'n') {
-                    const knightMoves = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
-                    for (const [dx, dy] of knightMoves) {
-                        const targetX = x + dx;
-                        const targetY = y + dy;
-                        if (targetX >= 0 && targetX < 8 && targetY >= 0 && targetY < 8 &&
-                            (!this.board[targetX][targetY] || this.board[target                         X][targetY][0] !== piece[0])) {
-                            moves.push([targetX, targetY]);
-                        }
-                    }
-                } else if (piece[1] === 'r' || piece[1] === 'b' || piece[1] === 'q') {
-                    const directions = [];
-                    if (piece[1] === 'r' || piece[1] === 'q') {
-                        directions.push([1, 0], [-1, 0], [0, 1], [0, -1]);
-                    }
-                    if (piece[1] === 'b' || piece[1] === 'q') {
-                        directions.push([1, 1], [-1, 1], [1, -1], [-1, -1]);
-                    }
-                    for (const [dx, dy] of directions) {
-                        let targetX = x + dx;
-                        let targetY = y + dy;
-                        while (targetX >= 0 && targetX < 8 && targetY >= 0 && targetY < 8 &&
-                            (!this.board[targetX][targetY] || this.board[targetX][targetY][0] !== piece[0])) {
-                            moves.push([targetX, targetY]);
-                            if (this.board[targetX][targetY]) break;
-                            targetX += dx;
-                            targetY += dy;
-                        }
-                    }
-                }
-                return moves;
-            }
-
-            updateCapturedPiecesDisplay() {
-                const whitePiecesContainer = document.getElementById('white-pieces');
-                const blackPiecesContainer = document.getElementById('black-pieces');
-                whitePiecesContainer.innerHTML = '';
-                blackPiecesContainer.innerHTML = '';
-                this.captured['w'].forEach(piece => {
-                    const pieceElement = document.createElement('span');
-                    pieceElement.classList.add('piece', 'white-piece');
-                    pieceElement.textContent = this.getPieceSymbol(piece);
-                    whitePiecesContainer.appendChild(pieceElement);
-                });
-                this.captured['b'].forEach(piece => {
-                    const pieceElement = document.createElement('span');
-                    pieceElement.classList.add('piece');
-                    pieceElement.textContent = this.getPieceSymbol(piece);
-                    blackPiecesContainer.appendChild(pieceElement);
-                });
-            }
-
-            getPieceSymbol(piece) {
-                const symbols = {
-                    'wr': '♖', 'wn': '♘', 'wb': '♗', 'wq': '♕', 'wk': '♔', 'wp': '♙',
-                    'br': '♜', 'bn': '♞', 'bb': '♝', 'bq': '♛', 'bk': '♚', 'bp': '♟'
-                };
-                return symbols[piece];
-            }
-        }
-
-        class Chessboard {
-            constructor(element, game) {
-                this.element = element;
-                this.game = game;
-                this.selectedSquare = null;
-                this.render();
-                this.element.addEventListener('click', this.onClick.bind(this));
-            }
-
-            render() {
-                this.element.innerHTML = '';
-                for (let i = 0; i < 8; i++) {
-                    for (let j = 0; j < 8; j++) {
-                        const square = document.createElement('div');
-                        square.classList.add('square');
-                        square.dataset.position = `${i}-${j}`;
-                        const piece = this.game.getPiece([i, j]);
-                        if (piece) {
-                            const pieceElement = document.createElement('span');
-                            pieceElement.classList.add('piece');
-                            if (piece[0] === 'w') {
-                                pieceElement.classList.add('white-piece');
-                            }
-                            pieceElement.textContent = this.getPieceSymbol(piece);
-                            square.appendChild(pieceElement);
-                        }
-                        this.element.appendChild(square);
-                    }
-                }
-            }
-
-            onClick(event) {
-                const target = event.target.closest('.square');
-                if (!target) return;
-                const [x, y] = target.dataset.position.split('-').map(Number);
-                if (this.selectedSquare) {
-                    const from = this.selectedSquare;
-                    const to = [x, y];
-                    this.game.move(from, to);
-                    this.selectedSquare = null;
-                    this.render();
-                } else {
-                    this.selectedSquare = [x, y];
-                    this.highlightMoves([x, y]);
-                }
-            }
-
-            highlightMoves(square) {
-                const validMoves = this.game.getValidMoves(square);
-                this.render();
-                for (const move of validMoves) {
-                    const [x, y] = move;
-                    const squareElement = this.element.querySelector(`[data-position="${x}-${y}"]`);
-                    squareElement.classList.add('highlight');
-                }
-            }
-
-            getPieceSymbol(piece) {
-                const symbols = {
-                    'wr': '♖', 'wn': '♘', 'wb': '♗', 'wq': '♕', 'wk': '♔', 'wp': '♙',
-                    'br': '♜', 'bn': '♞', 'bb': '♝', 'bq': '♛', 'bk': '♚', 'bp': '♟'
-                };
-                return symbols[piece];
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const game = new Chess();
-            const boardElement = document.getElementById('board');
-            new Chessboard(boardElement, game);
-        });
-    </script>
+  </div>
 </body>
-</html>
 
 
 
