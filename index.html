@@ -51,6 +51,10 @@
             background-color: #ff0 !important;
         }
 
+        .white-piece {
+            color: #fff;
+        }
+
         .piece {
             font-size: 2.5rem;
         }
@@ -154,11 +158,52 @@
                 const piece = this.board[x][y];
                 if (!piece) return [];
                 const moves = [];
-                if (piece === 'wp' && x > 0 && !this.board[x-1][y]) {
-                    moves.push([x-1, y]);
-                }
-                if (piece === 'bp' && x < 7 && !this.board[x+1][y]) {
-                    moves.push([x+1, y]);
+                if (piece[1] === 'p') {
+                    const direction = piece[0] === 'w' ? -1 : 1;
+                    const targetX = x + direction;
+                    if (targetX >= 0 && targetX < 8 && !this.board[targetX][y]) {
+                        moves.push([targetX, y]);
+                    }
+                } else if (piece[1] === 'k') {
+                    for (let dx = -1; dx <= 1; dx++) {
+                        for (let dy = -1; dy <= 1; dy++) {
+                            const targetX = x + dx;
+                            const targetY = y + dy;
+                            if (targetX >= 0 && targetX < 8 && targetY >= 0 && targetY < 8 &&
+                                (dx !== 0 || dy !== 0) && (!this.board[targetX][targetY] || this.board[targetX][targetY][0] !== piece[0])) {
+                                moves.push([targetX, targetY]);
+                            }
+                        }
+                    }
+                } else if (piece[1] === 'n') {
+                    const knightMoves = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+                    for (const [dx, dy] of knightMoves) {
+                        const targetX = x + dx;
+                        const targetY = y + dy;
+                        if (targetX >= 0 && targetX < 8 && targetY >= 0 && targetY < 8 &&
+                            (!this.board[targetX][targetY] || this.board[target                         X][targetY][0] !== piece[0])) {
+                            moves.push([targetX, targetY]);
+                        }
+                    }
+                } else if (piece[1] === 'r' || piece[1] === 'b' || piece[1] === 'q') {
+                    const directions = [];
+                    if (piece[1] === 'r' || piece[1] === 'q') {
+                        directions.push([1, 0], [-1, 0], [0, 1], [0, -1]);
+                    }
+                    if (piece[1] === 'b' || piece[1] === 'q') {
+                        directions.push([1, 1], [-1, 1], [1, -1], [-1, -1]);
+                    }
+                    for (const [dx, dy] of directions) {
+                        let targetX = x + dx;
+                        let targetY = y + dy;
+                        while (targetX >= 0 && targetX < 8 && targetY >= 0 && targetY < 8 &&
+                            (!this.board[targetX][targetY] || this.board[targetX][targetY][0] !== piece[0])) {
+                            moves.push([targetX, targetY]);
+                            if (this.board[targetX][targetY]) break;
+                            targetX += dx;
+                            targetY += dy;
+                        }
+                    }
                 }
                 return moves;
             }
@@ -170,7 +215,7 @@
                 blackPiecesContainer.innerHTML = '';
                 this.captured['w'].forEach(piece => {
                     const pieceElement = document.createElement('span');
-                    pieceElement.classList.add('piece');
+                    pieceElement.classList.add('piece', 'white-piece');
                     pieceElement.textContent = this.getPieceSymbol(piece);
                     whitePiecesContainer.appendChild(pieceElement);
                 });
@@ -204,13 +249,16 @@
                 this.element.innerHTML = '';
                 for (let i = 0; i < 8; i++) {
                     for (let j = 0; j < 8; j++) {
-                                                const square = document.createElement('div');
+                        const square = document.createElement('div');
                         square.classList.add('square');
                         square.dataset.position = `${i}-${j}`;
                         const piece = this.game.getPiece([i, j]);
                         if (piece) {
                             const pieceElement = document.createElement('span');
                             pieceElement.classList.add('piece');
+                            if (piece[0] === 'w') {
+                                pieceElement.classList.add('white-piece');
+                            }
                             pieceElement.textContent = this.getPieceSymbol(piece);
                             square.appendChild(pieceElement);
                         }
@@ -262,6 +310,7 @@
     </script>
 </body>
 </html>
+
 
 
 
