@@ -204,7 +204,7 @@
                 this.element.innerHTML = '';
                 for (let i = 0; i < 8; i++) {
                     for (let j = 0; j < 8; j++) {
-                        const square = document.createElement('div');
+                                                const square = document.createElement('div');
                         square.classList.add('square');
                         square.dataset.position = `${i}-${j}`;
                         const piece = this.game.getPiece([i, j]);
@@ -262,6 +262,8 @@
     </script>
 </body>
 </html>
+
+
 
 
 
