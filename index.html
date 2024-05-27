@@ -7,12 +7,18 @@
     <style>
         body {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
             height: 100vh;
             background-color: #f0f0f0;
             margin: 0;
             font-family: Arial, sans-serif;
+        }
+
+        .game-container {
+            display: flex;
+            align-items: center;
         }
 
         .board {
@@ -48,17 +54,52 @@
         .piece {
             font-size: 2.5rem;
         }
+
+        .captured-pieces {
+            margin: 0 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .captured-pieces .player {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .captured-pieces .pieces {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .captured-pieces .piece {
+            font-size: 1.5rem;
+            margin: 5px;
+        }
     </style>
 </head>
 <body>
-    <div id="board" class="board"></div>
+    <div class="game-container">
+        <div class="captured-pieces" id="captured-white">
+            <div class="player">White's Captured Pieces</div>
+            <div class="pieces" id="white-pieces"></div>
+        </div>
+        <div id="board" class="board"></div>
+        <div class="captured-pieces" id="captured-black">
+            <div class="player">Black's Captured Pieces</div>
+            <div class="pieces" id="black-pieces"></div>
+        </div>
+    </div>
     <script>
-        // Basic Chess Logic (chess.js simplified)
         class Chess {
             constructor() {
                 this.board = this.createBoard();
                 this.turn = 'w';
                 this.history = [];
+                this.captured = {
+                    'w': [],
+                    'b': []
+                };
             }
 
             createBoard() {
@@ -67,7 +108,6 @@
                     const row = new Array(8).fill(null);
                     board.push(row);
                 }
-                // Initialize pieces (simplified)
                 const initialSetup = [
                     ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
                     ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
@@ -90,7 +130,13 @@
                 const [tx, ty] = to;
                 const piece = this.board[fx][fy];
                 if (!piece || piece[0] !== this.turn) return null;
-                // Simplified move validation
+
+                const targetPiece = this.board[tx][ty];
+                if (targetPiece) {
+                    this.captured[this.turn].push(targetPiece);
+                    this.updateCapturedPiecesDisplay();
+                }
+
                 this.board[tx][ty] = piece;
                 this.board[fx][fy] = null;
                 this.turn = this.turn === 'w' ? 'b' : 'w';
@@ -104,7 +150,6 @@
             }
 
             getValidMoves(square) {
-                // Simplified valid moves (only basic pawn move shown)
                 const [x, y] = square;
                 const piece = this.board[x][y];
                 if (!piece) return [];
@@ -117,9 +162,35 @@
                 }
                 return moves;
             }
+
+            updateCapturedPiecesDisplay() {
+                const whitePiecesContainer = document.getElementById('white-pieces');
+                const blackPiecesContainer = document.getElementById('black-pieces');
+                whitePiecesContainer.innerHTML = '';
+                blackPiecesContainer.innerHTML = '';
+                this.captured['w'].forEach(piece => {
+                    const pieceElement = document.createElement('span');
+                    pieceElement.classList.add('piece');
+                    pieceElement.textContent = this.getPieceSymbol(piece);
+                    whitePiecesContainer.appendChild(pieceElement);
+                });
+                this.captured['b'].forEach(piece => {
+                    const pieceElement = document.createElement('span');
+                    pieceElement.classList.add('piece');
+                    pieceElement.textContent = this.getPieceSymbol(piece);
+                    blackPiecesContainer.appendChild(pieceElement);
+                });
+            }
+
+            getPieceSymbol(piece) {
+                const symbols = {
+                    'wr': '♖', 'wn': '♘', 'wb': '♗', 'wq': '♕', 'wk': '♔', 'wp': '♙',
+                    'br': '♜', 'bn': '♞', 'bb': '♝', 'bq': '♛', 'bk': '♚', 'bp': '♟'
+                };
+                return symbols[piece];
+            }
         }
 
-        // Basic Chessboard Display (chessboard.js simplified)
         class Chessboard {
             constructor(element, game) {
                 this.element = element;
@@ -191,6 +262,7 @@
     </script>
 </body>
 </html>
+
 
 
 
